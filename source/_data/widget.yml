@@ -1,0 +1,43 @@
+welcome:
+  layout: markdown
+  title: '欢迎来到SFZhang的知识库'
+  content: |
+    不以物喜，不以己悲
+    <script src="https://v1.hitokoto.cn/?c=i&encode=js&select=%23hitokoto" defer=""></script>
+    <p>一诗：<span id="hitokoto"></span></p>
+
+yiyan:
+  layout: markdown
+  title: '一诗'
+  content: |
+    <script src="https://v1.hitokoto.cn/?c=i&encode=js&select=%23hitokoto" defer=""></script>
+    <p><span id="hitokoto"></span></p>
+
+timeline:
+  layout: timeline
+  title: 生活碎片
+  api: https://api.github.com/repos/z23654262/blog-life/issues?per_page=10 # 若你想限制数量，在api链接后面加上?per_page=1指限制为1条
+  user: # 是否过滤只显示某个人发布的内容，如果要筛选多人，用英文逗号隔开
+  hide: # title,footer # 隐藏标题或底部 # 此功能需要 Stellar v1.13.0
+
+ghuser:
+  layout: ghuser
+  username: z23654262 # your github login username
+  avatar: true # show avatar or not
+  menu: true # show menu or not
+
+#搜索
+search_blog:
+  layout: search
+  filter: /blog/ # or /posts/ ...
+  placeholder: 文章搜索
+
+search_all_docs:
+  layout: search
+  filter: /wiki/
+  placeholder: 文档系统搜索
+
+search_docs:
+  layout: search
+  filter: auto
+  placeholder: 文档内搜索

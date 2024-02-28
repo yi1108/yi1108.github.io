@@ -1,0 +1,82 @@
+
+footer:
+  social:
+    QQ:
+      icon: '<img src="/customize/svg/contact.svg"/>'
+      url: https://wpa.qq.com/msgrd?v=3&uin=2856024429&site=qq&menu=yes&jumpflag=1
+    github:
+      icon: '<img src="/customize/svg/github.svg"/>'
+      url: 	https://images.unsplash.com/photo-1696669710138-29…xMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+    #iconfont:
+    #  icon: '<img src="/customize/svg/iconfont.svg"/>'
+    #  url: https://www.iconfont.cn/
+    unsplash:
+      icon: '<img src="/customize/svg/unsplash.svg"/>'
+      url: https://unsplash.com/@z23654262
+    train:
+      icon: '<img src="/customize/svg/train.svg"/>'
+      url: https://unsplash.com/@z23654262
+    Moon:
+      icon: '<img id="ThemeM" src="/customize/svg/moon.svg"/>'
+      url: javaScript:void('永夜');
+    Sun:
+      icon: '<img id="ThemeL" src="/customize/svg/sun.svg"/>'
+      url: javaScript:void('永昼');
+    #AI:
+    # icon: '<img id="ThemeAI" src="/customize/svg/auto.svg"/>'
+    # url: javaScript:void('跟随系统');
+
+
+sidebar:
+  menu:
+    post: '[btn.blog](/)'
+    wiki: '[btn.wiki](/)'
+    friends: '[友链](/)'
+    about: '[关于](/)'
+
+
+article:
+  type: tech # tech/story
+  auto_cover: true
+  auto_excerpt: 200
+
+
+style:
+  font-family:
+    body: '"LXGW WenKai Screen", sans-serif'
+
+# 侧边栏主功能导航菜单
+menubar:
+  columns: 4 # 一行多少个
+  items: # 可按照自己需求增加，符合以下格式即可
+   - id: post # 页面中高亮的 menu_id
+     theme: '#1BCDFC' # 高亮时的颜色，仅 svg 中 fill="currentColor" 时有效
+     icon: solar:documents-bold-duotone # 支持 svg/img 标签，可以定义在 icons.yml 文件中，也支持外部图片的 URL
+     title: 博客 # 标题
+     url: / # 跳转链接，支持相对路径和绝对路径
+   - id: wiki
+     theme: '#3DC550'
+     icon: solar:notebook-bookmark-bold-duotone
+     title: 文档
+     url: /wiki/
+#   - id: explore
+#     theme: '#FA6400'
+#     icon: solar:planet-bold-duotone
+#     title: 探索
+#     url: /explore/
+#   - id: social
+#     theme: '#F44336'
+#     icon: solar:chat-square-like-bold-duotone
+#     title: 社交
+#     url: /friends/
+
+
+
+# 文章搜索
+search:
+  service: local_search # local_search, todo...
+  local_search: # 在 front-matter 中设置 indexing:false 来避免被搜索索引
+    field: all # post, page, all
+    path: /search.json # 搜索文件存放位置
+    content: true # 是否搜索内容
+    codeblock: true # 是否搜索代码块（需要content: true)

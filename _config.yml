@@ -7,13 +7,14 @@ title: Hexo
 subtitle: ''
 description: ''
 keywords:
-author: John Doe
-language: en
+author: yi
+language: zh-CN
 timezone: ''
+email:  22@qq.com
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
-url: https://yi1108.github.io/note/
+url: https://yi1108.github.io
 permalink: :year/:month/:day/:title/
 permalink_defaults:
 pretty_urls:
@@ -96,12 +97,40 @@ ignore:
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: indigo
+theme: stellar
 
 
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
   type: git
-  repo: https://github.com/yi1108/note.git
+  repo: https://github.com/yi1108/yi1108.github.io.git
   branch: pages
+
+
+inject:
+  head:
+    - <link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'"> #字体
+
+
+tag_plugins:
+  # {% image %}
+  image:
+    fancybox: true # true, false
+    parse_markdown: true # 把 markdown 格式的图片解析成图片标签
+
+######## JS Plugins ########
+plugins:
+  # https://fancyapps.com/docs/ui/fancybox/
+  # available for {% image xxx %}
+  fancybox:
+    enable: true
+    #js: /customize/js/fancybox.umd.js
+    css: /customize/css/fancybox.css
+    js: https://fastly.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js
+    #css: https://fastly.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css
+    # 可以处理评论区的图片（不支持 iframe 类评论系统）例如：
+    # 使用twikoo评论可以写: .tk-content img:not([class*="emo"])
+    # 使用waline评论可以写: #waline_container .vcontent img
+    selector: .swiper-slide img, .md-text.content p>img, .md-text.content li img , .wl-content img, .image-bg img # 多个选择器用英文逗号隔开
+    #selector: .swiper-slide img # 多个选择器用英文逗号隔开
