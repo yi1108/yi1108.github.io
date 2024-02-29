@@ -1,0 +1,484 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.26.8" theme-name="Stellar" theme-version="1.26.8">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>五种IO模型：操作系统五种IO模型大全 - 笔记</title>
+
+  
+    <meta name="description" content="文章目录 五种IO模型：操作系统五种IO模型大全 一、IO模型简介  1.1 操作系统的内存简介  1.1.1 操作系统的应用与内核 1.1.2 内核空间与用户空间 1.1.3 CPU指令等级 1.1.4 进程的内核态和用户态   1.2 IO的分类  1.2.1 网络IO和磁盘IO 1.2.1 同步IO和异步IO 1.2.2 阻塞IO和非阻塞IO   1.3 操作系统的五种IO模型  1.3.1">
+<meta property="og:type" content="article">
+<meta property="og:title" content="五种IO模型：操作系统五种IO模型大全">
+<meta property="og:url" content="https://yi1108.github.io/2024/02/05/nio/%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B%EF%BC%9A%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B%E5%A4%A7%E5%85%A8/index.html">
+<meta property="og:site_name" content="笔记">
+<meta property="og:description" content="文章目录 五种IO模型：操作系统五种IO模型大全 一、IO模型简介  1.1 操作系统的内存简介  1.1.1 操作系统的应用与内核 1.1.2 内核空间与用户空间 1.1.3 CPU指令等级 1.1.4 进程的内核态和用户态   1.2 IO的分类  1.2.1 网络IO和磁盘IO 1.2.1 同步IO和异步IO 1.2.2 阻塞IO和非阻塞IO   1.3 操作系统的五种IO模型  1.3.1">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/a5bcf7d262144731867fd3b4cb9b27a0.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/ce4e881e5884418fa5f16e4039825b43.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/92a5947601824bebaa13c0f068397790.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/872813fa349b4d6a9cb32fbe3cd27be7.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/87d8aa1727834d15961f26ff64c2c8ea.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/326cb484c3404f9096df0bb61250079f.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/87bb04d3a844489fa2c93c90a41608f7.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/035b991fef9f4a73ad1daedfdf99bdcf.png#pic_center">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/022d91ee6ae94770b590b80e1479f465.png#pic_center">
+<meta property="og:image" content="https://g.csdnimg.cn/extension-box/1.1.6/image/qq.png">
+<meta property="og:image" content="https://g.csdnimg.cn/extension-box/1.1.6/image/ic_move.png">
+<meta property="article:published_time" content="2024-02-05T09:00:07.000Z">
+<meta property="article:modified_time" content="2024-02-28T07:26:18.507Z">
+<meta property="article:author" content="yi">
+<meta property="article:tag" content="nio">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/a5bcf7d262144731867fd3b4cb9b27a0.png#pic_center">
+  
+  
+  
+  <meta name="keywords" content="nio">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.26.8">
+
+  
+
+  
+
+  
+  <link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'"><script>
+  if (window.localStorage.getItem('ZYI_Theme_Mode')==='dark' || (window.localStorage.getItem('ZYI_Theme_Mode')==='Moss' && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+      document.querySelector("html").id = "ZYDark";
+  }
+</script>
+<link rel="stylesheet" href="/customize/css/ZYDark.css">
+</head>
+<body>
+
+<div class="l_body content tech" id="start" layout="post" ><aside class="l_left"><div class="sidebar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="title" href="/"><div class="main" ff="title">笔记</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a></nav>
+</div>
+<div class="widgets">
+
+<widget class="widget-wrapper toc single" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span></div><div class="widget-body fs14"><div class="doc-tree active"><ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%87%E7%AB%A0%E7%9B%AE%E5%BD%95"><span class="toc-text">文章目录</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B%EF%BC%9A%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B%E5%A4%A7%E5%85%A8"><span class="toc-text">五种IO模型：操作系统五种IO模型大全</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81IO%E6%A8%A1%E5%9E%8B%E7%AE%80%E4%BB%8B"><span class="toc-text">一、IO模型简介</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%80%E4%BB%8B"><span class="toc-text">1.1 操作系统的内存简介</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-1-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E5%BA%94%E7%94%A8%E4%B8%8E%E5%86%85%E6%A0%B8"><span class="toc-text">1.1.1 操作系统的应用与内核</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-2-%E5%86%85%E6%A0%B8%E7%A9%BA%E9%97%B4%E4%B8%8E%E7%94%A8%E6%88%B7%E7%A9%BA%E9%97%B4"><span class="toc-text">1.1.2 内核空间与用户空间</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-3-CPU%E6%8C%87%E4%BB%A4%E7%AD%89%E7%BA%A7"><span class="toc-text">1.1.3 CPU指令等级</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-4-%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%86%85%E6%A0%B8%E6%80%81%E5%92%8C%E7%94%A8%E6%88%B7%E6%80%81"><span class="toc-text">1.1.4 进程的内核态和用户态</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-IO%E7%9A%84%E5%88%86%E7%B1%BB"><span class="toc-text">1.2 IO的分类</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-1-%E7%BD%91%E7%BB%9CIO%E5%92%8C%E7%A3%81%E7%9B%98IO"><span class="toc-text">1.2.1 网络IO和磁盘IO</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-1-%E5%90%8C%E6%AD%A5IO%E5%92%8C%E5%BC%82%E6%AD%A5IO"><span class="toc-text">1.2.1 同步IO和异步IO</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-2-%E9%98%BB%E5%A1%9EIO%E5%92%8C%E9%9D%9E%E9%98%BB%E5%A1%9EIO"><span class="toc-text">1.2.2 阻塞IO和非阻塞IO</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B"><span class="toc-text">1.3 操作系统的五种IO模型</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-1-%E9%98%BB%E5%A1%9EIO%E6%A8%A1%E5%9E%8B"><span class="toc-text">1.3.1 阻塞IO模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-2-%E9%9D%9E%E9%98%BB%E5%A1%9EIO%E6%A8%A1%E5%9E%8B"><span class="toc-text">1.3.2 非阻塞IO模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-3-%E5%A4%8D%E7%94%A8IO%E6%A8%A1%E5%9E%8B"><span class="toc-text">1.3.3 复用IO模型</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1%EF%BC%89select-%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6O-n"><span class="toc-text">1）select(时间复杂度O(n))</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2%EF%BC%89poll-%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6O-n"><span class="toc-text">2）poll(时间复杂度O(n))</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#3%EF%BC%89epoll-%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6O-1"><span class="toc-text">3）epoll (时间复杂度O(1))</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#4%EF%BC%89IO%E5%A4%8D%E7%94%A8%E6%A8%A1%E5%9E%8B%E5%B0%8F%E7%BB%93"><span class="toc-text">4）IO复用模型小结</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-4-%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8IO%E6%A8%A1%E5%9E%8B"><span class="toc-text">1.3.4 信号驱动IO模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-3-5-%E5%BC%82%E6%AD%A5IO%E6%A8%A1%E5%9E%8B"><span class="toc-text">1.3.5 异步IO模型</span></a></li></ol></div></div></widget>
+
+
+
+
+
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/08/05/Spring-%E6%95%B4%E5%90%88-Redis-Stream-%E5%81%9A%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"><span class="title">Spring 整合 Redis Stream 做消息队列</span></a><a class="item title" href="/2022/11/12/docker%E5%AD%A6%E4%B9%A0/"><span class="title">docker学习</span></a><a class="item title" href="/2023/01/08/oauth/"><span class="title">oauth</span></a><a class="item title" href="/2022/11/08/git/"><span class="title">git</span></a><a class="item title" href="/2022/11/12/activiti%E5%AD%A6%E4%B9%A0/"><span class="title">activiti学习</span></a><a class="item title" href="/2022/11/30/py%E5%AD%A6%E4%B9%A0/"><span class="title">福瑞莱</span></a><a class="item title" href="/2022/11/01/SpringCloud%E5%AD%A6%E4%B9%A0/"><span class="title">SpringCloud学习</span></a><a class="item title" href="/2022/11/12/mysql%E8%A1%A8%E5%90%8D%E5%88%97%E5%90%8D%E8%BD%AC%E5%B0%8F%E5%86%99/"><span class="title">mysql表名列名转小写</span></a><a class="item title" href="/2022/07/09/redis%E5%AD%A6%E4%B9%A0%E5%B0%8F%E8%AE%B0/"><span class="title">redis学习小记</span></a><a class="item title" href="/2022/10/31/javase%E5%A4%8D%E4%B9%A0/"><span class="title">javase</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="javaScript:void('永夜');" rel="noopener noreferrer"><img class="lazy" id="ThemeM" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/customize/svg/moon.svg"/></a><a class="social" href="javaScript:void('永昼');" rel="noopener noreferrer"><img class="lazy" id="ThemeL" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/customize/svg/sun.svg"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    
+<div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-02-05T09:00:07.000Z">2024-02-05</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-02-28T07:26:18.507Z">2024-02-28</time></span></div></div>
+</div>
+
+    
+    <div class="bottom">
+      <div class="text-area">
+        <h1 class="text title"><span>五种IO模型：操作系统五种IO模型大全</span></h1>
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h4 id="文章目录"><a href="#文章目录" class="headerlink" title="文章目录"></a>文章目录</h4><ul>
+<li><a href="#IOIO_3">五种IO模型：操作系统五种IO模型大全</a></li>
+<li><a href="#IO_4">一、IO模型简介</a></li>
+<li><ul>
+<li><a href="#11__6">1.1 操作系统的内存简介</a></li>
+<li><ul>
+<li><a href="#111__8">1.1.1 操作系统的应用与内核</a></li>
+<li><a href="#112__19">1.1.2 内核空间与用户空间</a></li>
+<li><a href="#113_CPU_32">1.1.3 CPU指令等级</a></li>
+<li><a href="#114__44">1.1.4 进程的内核态和用户态</a></li>
+</ul>
+</li>
+<li><a href="#12_IO_66">1.2 IO的分类</a></li>
+<li><ul>
+<li><a href="#121_IOIO_70">1.2.1 网络IO和磁盘IO</a></li>
+<li><a href="#121_IOIO_81">1.2.1 同步IO和异步IO</a></li>
+<li><a href="#122_IOIO_89">1.2.2 阻塞IO和非阻塞IO</a></li>
+</ul>
+</li>
+<li><a href="#13_IO_99">1.3 操作系统的五种IO模型</a></li>
+<li><ul>
+<li><a href="#131_IO_101">1.3.1 阻塞IO模型</a></li>
+<li><a href="#132_IO_115">1.3.2 非阻塞IO模型</a></li>
+<li><a href="#133_IO_127">1.3.3 复用IO模型</a></li>
+<li><ul>
+<li><a href="#1selectOn_154">1）select(时间复杂度O(n))</a></li>
+<li><a href="#2pollOn_160">2）poll(时间复杂度O(n))</a></li>
+<li><a href="#3epoll_O1_164">3）epoll (时间复杂度O(1))</a></li>
+<li><a href="#4IO_172">4）IO复用模型小结</a></li>
+</ul>
+</li>
+<li><a href="#134_IO_189">1.3.4 信号驱动IO模型</a></li>
+<li><a href="#135_IO_202">1.3.5 异步IO模型</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#_220"></a></li>
+</ul>
+<h2 id="五种IO模型：操作系统五种IO模型大全"><a href="#五种IO模型：操作系统五种IO模型大全" class="headerlink" title="五种IO模型：操作系统五种IO模型大全"></a>五种<a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=IO%E6%A8%A1%E5%9E%8B&spm=1001.2101.3001.7020">IO模型</a>：操作系统五种IO模型大全</h2><h2 id="一、IO模型简介"><a href="#一、IO模型简介" class="headerlink" title="一、IO模型简介"></a>一、IO模型简介</h2><h3 id="1-1-操作系统的内存简介"><a href="#1-1-操作系统的内存简介" class="headerlink" title="1.1 操作系统的内存简介"></a>1.1 操作系统的内存简介</h3><h4 id="1-1-1-操作系统的应用与内核"><a href="#1-1-1-操作系统的应用与内核" class="headerlink" title="1.1.1 操作系统的应用与内核"></a>1.1.1 操作系统的应用与内核</h4><p>现代计算机是由硬件和操作系统组成，我们的应用程序要操作硬件（如往磁盘上写数据），就需要先与内核交互，然后再由内核与硬件交互；</p>
+<p>操作系统可以划分为：<strong>内核</strong>与<strong>应用</strong>两部分；</p>
+<p>内核提供<a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86&spm=1001.2101.3001.7020">进程管理</a>、内存管理、网络等底层功能，封装了与硬件交互的接口，通过系统调用提供给上层应用使用。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img-blog.csdnimg.cn/a5bcf7d262144731867fd3b4cb9b27a0.png#pic_center" alt="在这里插入图片描述"></p>
+<h4 id="1-1-2-内核空间与用户空间"><a href="#1-1-2-内核空间与用户空间" class="headerlink" title="1.1.2 内核空间与用户空间"></a>1.1.2 内核空间与用户空间</h4><p>现在操作系统都是采用<strong>虚拟地址空间</strong>，那么对32位操作系统而言，它的寻址空间（虚拟存储空间）为4G（2的32次方）。操作系统的核心是内核，独立于普通的应用程序，可以访问受保护的内存空间（内核空间），也有访问底层硬件设备的所有权限。</p>
+<p>为了保证用户进程不能直接操作内核（kernel），保证内核的安全，操心系统将虚拟空间划分为两部分，一部分为<strong>内核空间</strong>，一部分为<strong>用户空间</strong>。内核空间是操作系统内核访问的区域，独立于普通的应用程序，是<strong>受保护的内存空间</strong>。用户空间是普通应用程序可访问的内存区域。</p>
+<p>针对linux操作系统而言，将最高的1G字节（从虚拟地址0xC0000000到0xFFFFFFFF），供内核使用，称为内核空间，而将3G字节（从虚拟地址0x00000000到0xBFFFFFFF），供各个进程使用，称为用户空间。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img-blog.csdnimg.cn/ce4e881e5884418fa5f16e4039825b43.png#pic_center" alt="在这里插入图片描述"></p>
+<p><strong>用户态的程序不能随意操作内核地址空间，即使用户的程序崩溃了，内核也不受影响。这样对操作系统具有一定的安全保护作用。</strong></p>
+<h4 id="1-1-3-CPU指令等级"><a href="#1-1-3-CPU指令等级" class="headerlink" title="1.1.3 CPU指令等级"></a>1.1.3 CPU指令等级</h4><p>其实早期操作系统是不区分内核空间和用户空间的，但是应用程序能访问任意内存空间，如果程序不稳定常常把系统搞崩溃，比如清除操作系统的内存数据。后来觉得让应用程序随便访问内存太危险了，就按照CPU 指令的重要程度对指令进行了分级；</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img-blog.csdnimg.cn/92a5947601824bebaa13c0f068397790.png#pic_center" alt="在这里插入图片描述"></p>
+<p>CPU指令分为四个级别：Ring0~Ring3，linux 只使用了 Ring0 和 Ring3 两个运行级别，进程运行Ring3级别的指令时运行在用户态，指令只访问用户空间，而运行在 Ring0级别时被称为运行在内核态，可以访问任意内存空间。</p>
+<hr>
+<h4 id="1-1-4-进程的内核态和用户态"><a href="#1-1-4-进程的内核态和用户态" class="headerlink" title="1.1.4 进程的内核态和用户态"></a>1.1.4 进程的内核态和用户态</h4><p><strong>当进程运行在内核空间时，它就处于内核态；当进程运行在用户空间时，它就处于用户态。</strong></p>
+<ul>
+<li>那什么时候运行再内核空间什么时候运行再用户空间呢？<ul>
+<li>当我们需要进行IO操作时，如读写硬盘文件、读写网卡数据等，进程需要切换到内核态，否则无法进行这样的操作，无论是从内核态切换到用户态，还是从用户态切换到内核态，都需要进行一次上下文的切换。一般情况下，应用不能直接操作内核空间的数据，需要把内核态的数据拷贝到用户空间才能操作。</li>
+</ul>
+</li>
+</ul>
+<p>比如我们 Java 中需要新建一个线程，调用 start() 方法时，基于Hotspot Linux 的JVM 源码实现，最终是调<code>pthread_create</code>系统方法来创建的线程，这里会从用户态切换到内核态完成系统资源的分配，线程的创建。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img-blog.csdnimg.cn/872813fa349b4d6a9cb32fbe3cd27be7.png#pic_center" alt="在这里插入图片描述"></p>
+<p>当一个任务（进程）执行系统调用而陷入内核代码中执行时，称进程处于内核运行态（内核态）</p>
+<blockquote>
+<p>Tips：除了系统调用可以实现用户态到内核态的切换，软中断和硬中断也会切换用户态和内核态。</p>
+</blockquote>
+<ul>
+<li><p>在内核态下：进程运行在内核地址空间中，此时 CPU 可以执行任何指令。运行的代码也不受任何的限制，可以自由地访问任何有效地址，也可以直接进行端口的访问。</p>
+</li>
+<li><p>在用户态下：进程运行在用户地址空间中，被执行的代码要受到 CPU 的很多检查，比如：进程只能访问映射其地址空间的页表项中规定的在用户态下可访问页面的虚拟地址。</p>
+</li>
+</ul>
+<h3 id="1-2-IO的分类"><a href="#1-2-IO的分类" class="headerlink" title="1.2 IO的分类"></a>1.2 IO的分类</h3><p>通常用户进程中的一个完整IO分为两阶段：<strong>用户进程空间&lt;- -&gt;内核空间</strong>、**内核空间&lt;- -&gt;设备空间(磁盘、网络等)**。</p>
+<h4 id="1-2-1-网络IO和磁盘IO"><a href="#1-2-1-网络IO和磁盘IO" class="headerlink" title="1.2.1 网络IO和磁盘IO"></a>1.2.1 网络IO和磁盘IO</h4><p>IO从读取数据的来源分为<strong>内存IO</strong>、 <strong>网络IO</strong>和<strong>磁盘IO</strong>三种，通常我们说的IO指的是后两者(因为内存IO的读写速度比网络IO和磁盘IO快的多)。</p>
+<p>I&#x2F;O按照设备来分的话，分为两种：一种是网络I&#x2F;O，也就是通过网络进行数据的拉取和输出。一种是磁盘I&#x2F;O，主要是对磁盘进行读写工作。</p>
+<ul>
+<li><strong>网络IO</strong>：等待网络数据到达网卡→把网卡中的数据读取到内核缓冲区，然后从内核缓冲区复制数据到进程空间。</li>
+<li><strong>磁盘IO</strong>：把数据从磁盘中读取到内核缓冲区，然后从内核缓冲区复制数据到进程空间。</li>
+</ul>
+<blockquote>
+<p>Tips：<strong>由于CPU和内存的速度远远高于外部设备（网卡，磁盘等）的速度，所以在IO编程中，存在速度严重不匹配的问题。</strong></p>
+</blockquote>
+<h4 id="1-2-1-同步IO和异步IO"><a href="#1-2-1-同步IO和异步IO" class="headerlink" title="1.2.1 同步IO和异步IO"></a>1.2.1 同步IO和异步IO</h4><ul>
+<li><p><strong>同步</strong>：A调用B，B的处理是同步的，在处理完之前他不会通知A，只有处理完之后才会明确的通知A。<strong>B在没有处理完A的请求时不能处理其他请求；</strong></p>
+</li>
+<li><p><strong>异步</strong>：A调用B，B的处理是异步的，B在接到请求后先告诉A我已经接到请求了，然后异步去处理，处理完之后通过回调等方式再通知A。<strong>B在处理A请求的同时，也可以接着处理其他人发送过来的请求；</strong></p>
+</li>
+</ul>
+<p>同步和异步最大的区别就是被调用方的<strong>执行方式</strong>和<strong>返回时机</strong>。同步指的是被调用方做完事情之后再返回，异步指的是被调用方先返回，然后再做事情，做完之后再想办法通知调用方。</p>
+<h4 id="1-2-2-阻塞IO和非阻塞IO"><a href="#1-2-2-阻塞IO和非阻塞IO" class="headerlink" title="1.2.2 阻塞IO和非阻塞IO"></a>1.2.2 阻塞IO和非阻塞IO</h4><ul>
+<li><p><strong>阻塞</strong>：A调用B，A一直等着B的返回，别的事情什么也不干。</p>
+</li>
+<li><p><strong>非阻塞</strong>：A调用B，A不用一直等着B的返回，先去忙别的事情了。</p>
+</li>
+</ul>
+<p>阻塞和非阻塞最大的区别就<strong>是在被调用方返回结果之前的这段时间内，调用方是否一直等待</strong>。阻塞指的是调用方一直等待别的事情什么都不做。非阻塞指的是调用方先去忙别的事情。</p>
+<blockquote>
+<p><strong>Tips：同步和异步强调的是被调用方（B–操作系统），阻塞和非阻塞强调的是调用方（A–应用程序）；</strong></p>
+</blockquote>
+<h3 id="1-3-操作系统的五种IO模型"><a href="#1-3-操作系统的五种IO模型" class="headerlink" title="1.3 操作系统的五种IO模型"></a>1.3 操作系统的五种IO模型</h3><h4 id="1-3-1-阻塞IO模型"><a href="#1-3-1-阻塞IO模型" class="headerlink" title="1.3.1 阻塞IO模型"></a>1.3.1 阻塞IO模型</h4><p>阻塞IO就是当应用A发起读取数据申请时，在内核数据没有准备好之前，应用A会一直处于等待数据状态，直到内核把数据准备好了交给应用A才结束。</p>
+<blockquote>
+<p><strong>Tips：我们之前所学过的所有的套接字，默认都是阻塞方式。</strong></p>
+</blockquote>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img-blog.csdnimg.cn/87d8aa1727834d15961f26ff64c2c8ea.png#pic_center" alt="在这里插入图片描述"></p>
+<ul>
+<li>优点：开发相对简单，在阻塞期间，用户线程被挂起，挂起期间不会占用CPU资源；</li>
+<li>缺点：<ul>
+<li>1）连接利用率不高，内核如果没有响应数据，则该连接一直处于阻塞状态，占用连接资源</li>
+<li>2）一个线程维护一个IO资源，当用大量并发请求时，需要创建等价的线程来处理请求，不适合用于高并发场景；</li>
+</ul>
+</li>
+</ul>
+<h4 id="1-3-2-非阻塞IO模型"><a href="#1-3-2-非阻塞IO模型" class="headerlink" title="1.3.2 非阻塞IO模型"></a>1.3.2 非阻塞IO模型</h4><p>非阻塞IO就是当应用A发起读取数据申请时，如果内核数据没有准备好会即刻告诉应用A（返回错误码等），不会让A在这里等待。一旦内核中的数据准备好了，并且又再次收到了A的请求，那么它马上就将数据拷贝到了用户线程，然后返回。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img-blog.csdnimg.cn/326cb484c3404f9096df0bb61250079f.png#pic_center" alt="在这里插入图片描述"></p>
+<ul>
+<li>优点：每次发起IO调用去内核获取数据时，在内核等待数据的过程中可以立即返回，用户线程不会被阻塞，实时性较好；</li>
+<li>缺点：<ul>
+<li>1）当用户线程A没有获取到数据时，不断轮询内核，查看是否有新的数据，占用大量CPU时间，效率不高；</li>
+<li>2）和阻塞IO一样，一个线程维护一个IO资源，当用大量并发请求时，需要创建等价的线程来处理请求，不适合用于高并发场景；</li>
+</ul>
+</li>
+</ul>
+<h4 id="1-3-3-复用IO模型"><a href="#1-3-3-复用IO模型" class="headerlink" title="1.3.3 复用IO模型"></a>1.3.3 复用IO模型</h4><p>如果在并发的环境下，可能会N个人向应用B发送消息，这种情况下我们的应用就必须创建多个线程去接收N个人发送过来的请求，每个请求都是一个独立的线程来处理；在并发量呈线性增长时，我们需要创建的线程数也随之而然的激增；</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img-blog.csdnimg.cn/87bb04d3a844489fa2c93c90a41608f7.png#pic_center" alt="在这里插入图片描述"></p>
+<p>这种情况下应用B就需要创建N个线程去读取数据，同时又因为应用线程是不知道什么时候会有数据读取，为了保证消息能及时读取到，那么这些线程自己必须不断的向内核发送请求来读取数据（非阻塞式）；</p>
+<p>这么多的线程不断请求数据，先不说服务器能不能扛得住这么多线程，就算扛得住那么很明显这种方式是不是太浪费资源了，线程是我们操作系统的宝贵资源，大量的线程用来去读取数据了，那么就意味着能做其它事情的线程就会少。</p>
+<hr>
+<p>后来，有人就提出了一个思路，能不能提供一种方式，可以由一个线程监控多个网络请求（<strong>linux系统把所有网络请求以一个fd来标识，我们后面将称为fd即文件描述符</strong>），这样就可以只需要一个或几个线程就可以完成数据状态询问的操作，当有数据准备就绪之后再分配对应的线程去读取数据，这么做就可以节省出大量的线程资源出来，这个就是<strong>IO复用模型</strong>的思路。</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img-blog.csdnimg.cn/035b991fef9f4a73ad1daedfdf99bdcf.png#pic_center" alt="在这里插入图片描述"></p>
+<p>IO复用模型的思路就是系统提供了一种函数（select&#x2F;poll&#x2F;<a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=epoll&spm=1001.2101.3001.7020">epoll</a>）可以同时监控多个fd的操作，有了这个函数后，应用线程通过调用select函数就可以同时监控多个fd，如果select监听的fd都没有可读数据，<strong>select调用进程会被阻塞</strong>；而只要有任何一个fd准备就绪了，select函数就会返回可读状态，这时询问线程再去通知处理数据的线程，对应的线程此时再发起请求去读取内核中准备好的数据；</p>
+<blockquote>
+<p><strong>Tips：在IO复用模型下，允许单线程内处理多个IO请求；</strong></p>
+</blockquote>
+<p><strong>Linux中IO复用的实现方式主要有select，poll和epoll</strong></p>
+<h5 id="1）select-时间复杂度O-n"><a href="#1）select-时间复杂度O-n" class="headerlink" title="1）select(时间复杂度O(n))"></a>1）select(时间复杂度O(n))</h5><ul>
+<li><strong><code>select</code><strong>：</strong>线性轮询扫描所有的fd</strong>，不管他们是否活跃，监听的IO最大连接数不能多于FD_ SIZE（32位操作系统1024，64位操作系统2048）。</li>
+</ul>
+<blockquote>
+<p><strong>Tips：select方式仅仅知道有I&#x2F;O事件发生了，却并不知道是哪那几个流（可能有一个，多个，甚至全部），用户线程只能无差别轮询所有流，找出能读出数据，或者写入数据的流，对他们进行操作。所以select具有O(n)的无差别轮询复杂度，同时处理的流越多，无差别轮询时间就越长。</strong></p>
+</blockquote>
+<h5 id="2）poll-时间复杂度O-n"><a href="#2）poll-时间复杂度O-n" class="headerlink" title="2）poll(时间复杂度O(n))"></a>2）poll(时间复杂度O(n))</h5><ul>
+<li>**<code>poll</code>**：原理和select相似，poll底层需要分配一个pollfd结构数组，维护在内核中，它没有数量限制，但IO数量大，扫描线性性能下降。</li>
+</ul>
+<h5 id="3）epoll-时间复杂度O-1"><a href="#3）epoll-时间复杂度O-1" class="headerlink" title="3）epoll (时间复杂度O(1))"></a>3）epoll (时间复杂度O(1))</h5><ul>
+<li><strong><code>epoll</code></strong> ：用于代替poll和select，没有大小限制。<strong>epoll采用事件驱动代替了轮询</strong>，epoll会把哪个流发生了怎样的I&#x2F;O事件通知用户线程，所以我们说epoll实际上是事件驱动（每个事件关联上fd）的，此时用户线程对这些流的操作都是有意义的。（复杂度降低到了O(1)），另外epoll模型采用mmap内存映射实现内核与用户空间的消息传递，减少用户态和内核态数据传输的开销，epoll模型在Linux2.6后内核支持。</li>
+</ul>
+<p>select，poll，epoll都是IO多路复用的机制。I&#x2F;O多路复用就通过一种机制，可以监视多个描述符，一旦某个描述符准备就绪，能够通知程序进行相应的读写操作。<strong>但select，poll，epoll本质上都是同步I&#x2F;O</strong>，因为他们都需要在读写事件就绪后自己负责进行读写(一个个的处理)，也就是说这个读写过程是<strong>阻塞的</strong>，而异步I&#x2F;O则无需自己负责进行读写，异步I&#x2F;O的实现会负责把数据从内核拷贝到用户空间。</p>
+<blockquote>
+<p>Tips：epoll跟select都能提供多路I&#x2F;O复用的解决方案。在现在的Linux内核里有都能够支持，其中epoll是Linux所特有，而select则应该是POSIX所规定，一般操作系统均有实现</p>
+</blockquote>
+<h5 id="4）IO复用模型小结"><a href="#4）IO复用模型小结" class="headerlink" title="4）IO复用模型小结"></a>4）IO复用模型小结</h5><ul>
+<li>关于IO复用模型，下面这个例子可以很好的说明IO复用模型的原理：</li>
+</ul>
+<p>某教室有10名学生和1名老师，这些学生上课会不停的提问，所以一个老师处理不了这么多的问题。那么学校为每个学生都配一名老师，也就是这个教室目前有10名老师。此后，只要有新的转校生，那么就会为这个学生专门分配一个老师，因为转校生也喜欢提问题。如果把以上例子中的学生比作客户端，那么老师就是负责进行数据交换的服务端。则该例子可以比作是多进程的方式。</p>
+<p>后来有一天，来了一位具有超能力的老师，这位老师回答问题非常迅速，并且可以应对所有的问题。而这位老师采用的方式是学生提问前必须先举手，确认举手学生后在回答问题。则现在的情况就是IO复用。</p>
+<hr>
+<ul>
+<li><strong>IO复用模型的优点</strong>：系统不必创建和维护大量的线程，只使用一个或几个线程来监听select选择器的操作，而一个选择器可同时处理成千上万个连接，大大减少了系统的开销；</li>
+<li><strong>IO复用模型的缺点</strong>：select本质上还是同步阻塞模式；</li>
+</ul>
+<p><strong>总结：</strong> 复用IO的基本思路就是通过select或poll、epoll来监控多fd ，来达到不必为每个fd创建一个对应的监控线程，从而减少线程资源创建的目的。<strong>复用IO模型的优势并不是对于单个连接能处理得更快，而是在于能处理更多的连接。</strong></p>
+<h4 id="1-3-4-信号驱动IO模型"><a href="#1-3-4-信号驱动IO模型" class="headerlink" title="1.3.4 信号驱动IO模型"></a>1.3.4 信号驱动IO模型</h4><p>当进程发起一个IO操作，系统调用sigaction执行一个信号处理函数，该函数向内核注册一个信号处理函数（回调函数），然后进程返回，并且不阻塞当前进程；当内核数据准备好时，内核使用信号（SIGIO）通知应用线程调用recvfrom来读取数据（运行回调函数）。</p>
+<p>信号驱动IO它也可以看成是一种<strong>异步非阻塞IO</strong></p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://img-blog.csdnimg.cn/022d91ee6ae94770b590b80e1479f465.png#pic_center" alt="在这里插入图片描述"></p>
+<p>我们说信号驱动IO模型是一种异步非阻塞IO模型，指的是用户线程去内核空间请求数据时，直接注册一个信号处理函数，然后用户线程返回（异步），而内核空间接收到请求后，开始处理（此时并不会阻塞，内核空间可以同时接收多个请求，注册多个信号处理函数）；</p>
+<p>但是，等到内核空间读取到数据之后，应用线程需要将数据从内核空间拷贝到用户空间，**此时是用户线程是阻塞的；**也就是说：<strong>应用程序将数据从内核态拷贝到用户态的过程是阻塞等待的，这是和异步IO的本质区别；</strong></p>
+<h4 id="1-3-5-异步IO模型"><a href="#1-3-5-异步IO模型" class="headerlink" title="1.3.5 异步IO模型"></a>1.3.5 异步IO模型</h4><p>在前面几种IO模型中，应用线程要获取数据总是先发送请求到内核，然后进行如下处理：</p>
+<ul>
+<li>1）<strong>阻塞IO</strong>：应用线程等待内核响应数据，期间什么都不能做</li>
+<li>2）<strong>非阻塞IO</strong>：应用线程立即响应，可以去处理其他事情，但需要不断轮询内核去获取数据</li>
+<li>3）<strong>复用IO</strong>：采用IO复用机制，请求都先交给select函数，由应用线程调用select函数来轮询所有的请求，当有请求需要获取数据时，应用线程再去内核获取数据；</li>
+<li>4）<strong>信号驱动IO</strong>：系统注册一个信号处理函数（回调函数），然后应用线程返回（不阻塞）；当内核中准备好数据后，应用线程需要把内核中的数据拷贝到用户空间，<strong>此时用户线程是阻塞的</strong>；</li>
+</ul>
+<hr>
+<p>在以上4种IO模型中，每次要去读取数据时都是事先发送请求询问内核是否有可读数据，然后再发起真正的读取数据请求；</p>
+<p>在异步IO模型中，应用只需要向内核发送一个请求，告诉内核它要读取数据后即刻返回；内核收到请求后会建立一个信号联系，当数据准备就绪，<strong>内核会主动把数据从内核复制到用户空间</strong>（而信号驱动是告诉应用程序何时可以开始拷贝数据），异步IO模型真正的做到了完完全全的非阻塞；</p>
+<blockquote>
+<p>Tips：异步IO模型和前面模型最大的区别是：<strong>前4个都是阻塞的</strong>，需要自己把用户准备好的数据，去内核拷贝到用户空间。而全异步不同，用户线程完全不需要关心实际的整个IO操作是如何进行的，只需要先发起一个请求，当接收内核返回的成功信号时表示IO操作已经完成，可以直接去使用数据，它是最理想的模型。</p>
+</blockquote>
+<p>仅限学习、交流使用！</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://g.csdnimg.cn/extension-box/1.1.6/image/qq.png"> QQ群名片</p>
+<p><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://g.csdnimg.cn/extension-box/1.1.6/image/ic_move.png"></p>
+<p>本文转自 <a target="_blank" rel="noopener" href="https://blog.csdn.net/Bb15070047748/article/details/124699009">https://blog.csdn.net/Bb15070047748/article/details/124699009</a>，如有侵权，请联系删除。</p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/02/05/nio/05%E3%80%90NIO%E6%A0%B8%E5%BF%83%E7%BB%84%E4%BB%B6%E4%B9%8BChannel%E3%80%91/">05 NIO核心组件之Channel</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/08/05/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">yi</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.26.8">Stellar 1.26.8</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class='float-panel mobile-only blur' style='display:none'>
+  <button type='button' class='sidebar-toggle mobile' onclick='sidebar.toggle()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+<div class="main-mask" onclick="sidebar.toggle()"></div></div></div><div class="scripts">
+<script type="text/javascript">
+  const stellar = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    loadCSS: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    // 从 butterfly 和 volantis 获得灵感
+    loadScript: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = stellar.config.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    // https://github.com/jerryc127/hexo-theme-butterfly
+    jQuery: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        stellar.loadScript(stellar.plugins.jQuery).then(fn)
+      } else {
+        fn()
+      }
+    }
+  };
+  stellar.version = '1.26.8';
+  stellar.github = 'https://github.com/xaoxuu/hexo-theme-stellar/tree/1.26.8';
+  stellar.config = {
+    date_suffix: {
+      just: '刚刚',
+      min: '分钟前',
+      hour: '小时前',
+      day: '天前',
+      month: '个月前',
+    },
+    root : '/',
+  };
+
+  // required plugins (only load if needs)
+  stellar.plugins = {
+    jQuery: 'https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js'
+  };
+
+  if ('local_search') {
+    stellar.search = {};
+    stellar.search.service = 'local_search';
+    if (stellar.search.service == 'local_search') {
+      let service_obj = Object.assign({}, {"field":"all","path":"/search.json","content":true,"codeblock":true,"sort":"-date"});
+      stellar.search[stellar.search.service] = service_obj;
+    }
+  }
+
+  // stellar js
+  stellar.plugins.stellar = Object.assign({"sites":"/js/plugins/sites.js","friends":"/js/plugins/friends.js","ghinfo":"/js/plugins/ghinfo.js","timeline":"/js/plugins/timeline.js","linkcard":"/js/plugins/linkcard.js","fcircle":"/js/plugins/fcircle.js","weibo":"/js/plugins/weibo.js","memos":"/js/plugins/memos.js","marked":"/js/plugins/marked.js"});
+
+  stellar.plugins.marked = Object.assign("https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js");
+  // optional plugins
+  if ('true' == 'true') {
+    stellar.plugins.lazyload = Object.assign({"enable":true,"js":"https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js","transition":"fade"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.swiper = Object.assign({"enable":true,"css":"https://unpkg.com/swiper@10.3/swiper-bundle.min.css","js":"https://unpkg.com/swiper@10.3/swiper-bundle.min.js"});
+  }
+  if ('' == 'true') {
+    stellar.plugins.scrollreveal = Object.assign({"enable":null,"js":"https://cdn.bootcdn.net/ajax/libs/scrollReveal.js/4.0.9/scrollreveal.min.js","distance":"16px","duration":800,"interval":100,"scale":1});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.preload = Object.assign({"enable":true,"service":"flying_pages","flying_pages":"https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.fancybox = Object.assign({"enable":true,"js":"https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js","css":"https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css","selector":null});
+  }
+  if ('false' == 'true') {
+    stellar.plugins.heti = Object.assign({"enable":false,"css":"https://unpkg.com/heti@0.9.2/umd/heti.min.css","js":"https://unpkg.com/heti@0.9.2/umd/heti-addon.min.js"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.copycode = Object.assign({"enable":true,"js":"/js/plugins/copycode.js","default_text":"Copy","success_text":"Copied","toast":"复制成功"});
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.26.8" async></script>
+
+<!-- optional -->
+
+
+
+
+
+
+<!-- inject -->
+<script type="text/javascript" src="/customize/js/ZYDark.js"></script>
+</div></body></html>

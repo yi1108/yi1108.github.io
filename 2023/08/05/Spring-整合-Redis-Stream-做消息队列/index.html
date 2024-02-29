@@ -1,0 +1,353 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.26.8" theme-name="Stellar" theme-version="1.26.8">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>Spring 整合 Redis Stream 做消息队列 - 笔记</title>
+
+  
+    <meta name="description" content="参考 https:&#x2F;&#x2F;www.jianshu.com&#x2F;p&#x2F;b95a265f838a为什么选redis stream1 不希望引入其它中间件2 业务规模目前不大 ，可以试水3 redis stream 比kafka还快？ 核心逻辑1.自定义注解 12345678@Documented@Retention(RetentionPolicy.RUNTIME)@Target(ElementType.TYPE">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring 整合 Redis Stream 做消息队列">
+<meta property="og:url" content="https://yi1108.github.io/2023/08/05/Spring-%E6%95%B4%E5%90%88-Redis-Stream-%E5%81%9A%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/index.html">
+<meta property="og:site_name" content="笔记">
+<meta property="og:description" content="参考 https:&#x2F;&#x2F;www.jianshu.com&#x2F;p&#x2F;b95a265f838a为什么选redis stream1 不希望引入其它中间件2 业务规模目前不大 ，可以试水3 redis stream 比kafka还快？ 核心逻辑1.自定义注解 12345678@Documented@Retention(RetentionPolicy.RUNTIME)@Target(ElementType.TYPE">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2023-08-05T09:00:07.000Z">
+<meta property="article:modified_time" content="2024-02-28T10:11:52.053Z">
+<meta property="article:author" content="yi">
+<meta property="article:tag" content="Spring">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary">
+  
+  
+  
+  <meta name="keywords" content="Spring,Redis">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.26.8">
+
+  
+
+  
+
+  
+  <link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'"><script>
+  if (window.localStorage.getItem('ZYI_Theme_Mode')==='dark' || (window.localStorage.getItem('ZYI_Theme_Mode')==='Moss' && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+      document.querySelector("html").id = "ZYDark";
+  }
+</script>
+<link rel="stylesheet" href="/customize/css/ZYDark.css">
+</head>
+<body>
+
+<div class="l_body content tech" id="start" layout="post" ><aside class="l_left"><div class="sidebar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="title" href="/"><div class="main" ff="title">笔记</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a></nav>
+</div>
+<div class="widgets">
+
+
+
+
+
+
+
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title active" href="/2023/08/05/Spring-%E6%95%B4%E5%90%88-Redis-Stream-%E5%81%9A%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"><span class="title">Spring 整合 Redis Stream 做消息队列</span><svg class="active-icon" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" d="M21 11.098v4.993c0 3.096 0 4.645-.734 5.321c-.35.323-.792.526-1.263.58c-.987.113-2.14-.907-4.445-2.946c-1.02-.901-1.529-1.352-2.118-1.47a2.225 2.225 0 0 0-.88 0c-.59.118-1.099.569-2.118 1.47c-2.305 2.039-3.458 3.059-4.445 2.945a2.238 2.238 0 0 1-1.263-.579C3 20.736 3 19.188 3 16.091v-4.994C3 6.81 3 4.666 4.318 3.333C5.636 2 7.758 2 12 2c4.243 0 6.364 0 7.682 1.332C21 4.665 21 6.81 21 11.098" opacity=".5"/><path fill="currentColor" d="M9 5.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5z"/></svg></a><a class="item title" href="/2022/11/12/docker%E5%AD%A6%E4%B9%A0/"><span class="title">docker学习</span></a><a class="item title" href="/2023/01/08/oauth/"><span class="title">oauth</span></a><a class="item title" href="/2022/11/08/git/"><span class="title">git</span></a><a class="item title" href="/2022/11/12/activiti%E5%AD%A6%E4%B9%A0/"><span class="title">activiti学习</span></a><a class="item title" href="/2022/11/30/py%E5%AD%A6%E4%B9%A0/"><span class="title">福瑞莱</span></a><a class="item title" href="/2022/11/01/SpringCloud%E5%AD%A6%E4%B9%A0/"><span class="title">SpringCloud学习</span></a><a class="item title" href="/2022/11/12/mysql%E8%A1%A8%E5%90%8D%E5%88%97%E5%90%8D%E8%BD%AC%E5%B0%8F%E5%86%99/"><span class="title">mysql表名列名转小写</span></a><a class="item title" href="/2022/07/09/redis%E5%AD%A6%E4%B9%A0%E5%B0%8F%E8%AE%B0/"><span class="title">redis学习小记</span></a><a class="item title" href="/2022/10/31/javase%E5%A4%8D%E4%B9%A0/"><span class="title">javase</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="javaScript:void('永夜');" rel="noopener noreferrer"><img class="lazy" id="ThemeM" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/customize/svg/moon.svg"/></a><a class="social" href="javaScript:void('永昼');" rel="noopener noreferrer"><img class="lazy" id="ThemeL" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/customize/svg/sun.svg"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    
+<div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-08-05T09:00:07.000Z">2023-08-05</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-02-28T10:11:52.053Z">2024-02-28</time></span></div></div>
+</div>
+
+    
+    <div class="bottom">
+      <div class="text-area">
+        <h1 class="text title"><span>Spring 整合 Redis Stream 做消息队列</span></h1>
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><p>参考 <a target="_blank" rel="noopener" href="https://www.jianshu.com/p/b95a265f838a">https://www.jianshu.com/p/b95a265f838a</a><br>为什么选redis stream<br>1 不希望引入其它中间件<br>2 业务规模目前不大 ，可以试水<br>3 redis stream 比kafka还快？</p>
+<p>核心逻辑<br>1.自定义注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Documented</span></span><br><span class="line"><span class="meta">@Retention(RetentionPolicy.RUNTIME)</span></span><br><span class="line"><span class="meta">@Target(ElementType.TYPE)</span></span><br><span class="line"><span class="keyword">public</span> <span class="meta">@interface</span> RedisStreamMqListen &#123;</span><br><span class="line">String <span class="title function_">value</span><span class="params">()</span>;</span><br><span class="line"></span><br><span class="line">    Class <span class="title function_">type</span><span class="params">()</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>2.监听器注册和发送方法封装</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">RedisStreamMqServiceImpl</span> <span class="keyword">implements</span> <span class="title class_">RedisStreamMqService</span> &#123;</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="type">long</span> <span class="variable">dataCenterId</span> <span class="operator">=</span> getDataCenterId();</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> RedisTemplate&lt;String, String&gt; redisTemplate;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 最大长度</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="type">long</span> maxLen;</span><br><span class="line"><span class="keyword">private</span> String group;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="title function_">RedisStreamMqServiceImpl</span><span class="params">(RedisTemplate&lt;String, String&gt; redisTemplate, String group, Long maxLen)</span> &#123;</span><br><span class="line">    <span class="built_in">this</span>.redisTemplate = redisTemplate;</span><br><span class="line">    <span class="built_in">this</span>.group = group;</span><br><span class="line">    <span class="built_in">this</span>.maxLen = maxLen;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> Long <span class="title function_">getDataCenterId</span><span class="params">()</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">hostName</span> <span class="operator">=</span> Inet4Address.getLocalHost().getHostName();</span><br><span class="line">        <span class="type">int</span>[] ints = StringUtils.toCodePoints(hostName);</span><br><span class="line">        <span class="type">int</span> <span class="variable">sums</span> <span class="operator">=</span> <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> b : ints) &#123;</span><br><span class="line">            sums += b;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> (<span class="type">long</span>) (sums % <span class="number">32</span>);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (UnknownHostException e) &#123;</span><br><span class="line">        <span class="comment">// 如果获取失败，则使用随机数备用</span></span><br><span class="line">        <span class="keyword">return</span> RandomUtils.nextLong(<span class="number">0</span>, <span class="number">31</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">listener</span><span class="params">(String event, Class type, StreamListener streamListener)</span> &#123;</span><br><span class="line">    createGroup(event);</span><br><span class="line">    startSubscription(event, type, streamListener);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> &lt;V&gt; <span class="keyword">void</span> <span class="title function_">coverSend</span><span class="params">(String event, V val)</span> &#123;</span><br><span class="line">    ObjectRecord&lt;String, V&gt; record = StreamRecords.newRecord().ofObject(val).withId(RecordId.autoGenerate())</span><br><span class="line">            .withStreamKey(event);</span><br><span class="line">    redisTemplate.opsForStream().add(record);</span><br><span class="line">    redisTemplate.opsForStream().trim(event, maxLen, <span class="literal">true</span>);</span><br><span class="line">    log.info(<span class="string">&quot;event &#123;&#125; send content &#123;&#125;&quot;</span>, event, StringUtils.abbreviate(val.toString().trim(), <span class="number">100</span>));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">startSubscription</span><span class="params">(String event, Class type, StreamListener streamListener)</span> &#123;</span><br><span class="line">    <span class="type">RedisConnectionFactory</span> <span class="variable">redisConnectionFactory</span> <span class="operator">=</span> redisTemplate.getConnectionFactory();</span><br><span class="line"></span><br><span class="line">    StreamMessageListenerContainer.<span class="type">StreamMessageListenerContainerOptions</span> <span class="variable">options</span> <span class="operator">=</span> StreamMessageListenerContainer.StreamMessageListenerContainerOptions</span><br><span class="line">            .builder().batchSize(<span class="number">5</span>) <span class="comment">// 设置批次大小为 5</span></span><br><span class="line">            .pollTimeout(Duration.ofSeconds(<span class="number">1</span>)).targetType(type).build();</span><br><span class="line"></span><br><span class="line">    <span class="type">StreamMessageListenerContainer</span> <span class="variable">listenerContainer</span> <span class="operator">=</span> StreamMessageListenerContainer.create(redisConnectionFactory,</span><br><span class="line">            options);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// redisTemplate 会自动加上前缀,所有在监听的时候也要加上</span></span><br><span class="line">    event = <span class="string">&quot;frl-stream:&quot;</span> + event;</span><br><span class="line">    listenerContainer.receiveAutoAck(Consumer.from(group, group + dataCenterId),</span><br><span class="line">            StreamOffset.create(event, ReadOffset.lastConsumed()), streamListener);</span><br><span class="line"></span><br><span class="line">    listenerContainer.start();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">createGroup</span><span class="params">(String event)</span> &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        redisTemplate.opsForStream().createGroup(event, group);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (RedisSystemException e) &#123;</span><br><span class="line">        <span class="keyword">if</span> (e.getRootCause() <span class="keyword">instanceof</span> RedisBusyException) &#123;</span><br><span class="line">            log.info(<span class="string">&quot;STREAM - Redis group already exists, skipping Redis group creation: &#123;&#125;&quot;</span>, group);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (e.getRootCause() <span class="keyword">instanceof</span> RedisCommandExecutionException) &#123;</span><br><span class="line">            log.info(<span class="string">&quot;STREAM - Stream does not yet exist, creating empty stream: &#123;&#125;&quot;</span>, event);</span><br><span class="line">            <span class="type">boolean</span> <span class="variable">streamExists</span> <span class="operator">=</span> redisTemplate.hasKey(event);</span><br><span class="line">            <span class="keyword">if</span> (!streamExists) &#123;</span><br><span class="line">                redisTemplate.opsForStream().add(event, Collections.singletonMap(<span class="string">&quot;&quot;</span>, <span class="string">&quot;&quot;</span>));</span><br><span class="line">            &#125;</span><br><span class="line">            redisTemplate.opsForStream().createGroup(event, group);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">throw</span> e;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中 核心逻辑为监听方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">listener</span><span class="params">(String event, Class type, StreamListener streamListener)</span> &#123;</span><br><span class="line">createGroup(event);</span><br><span class="line">startSubscription(event, type, streamListener);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">createGroup</span><span class="params">(String event)</span> &#123;</span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">redisTemplate.opsForStream().createGroup(event, group);</span><br><span class="line">&#125; <span class="keyword">catch</span> (RedisSystemException e) &#123;</span><br><span class="line"><span class="keyword">if</span> (e.getRootCause() <span class="keyword">instanceof</span> RedisBusyException) &#123;</span><br><span class="line">log.info(<span class="string">&quot;STREAM - Redis group already exists, skipping Redis group creation: &#123;&#125;&quot;</span>, group);</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (e.getRootCause() <span class="keyword">instanceof</span> RedisCommandExecutionException) &#123;</span><br><span class="line">log.info(<span class="string">&quot;STREAM - Stream does not yet exist, creating empty stream: &#123;&#125;&quot;</span>, event);</span><br><span class="line"><span class="type">boolean</span> <span class="variable">streamExists</span> <span class="operator">=</span> redisTemplate.hasKey(event);</span><br><span class="line"><span class="keyword">if</span> (!streamExists) &#123;</span><br><span class="line">redisTemplate.opsForStream().add(event, Collections.singletonMap(<span class="string">&quot;&quot;</span>, <span class="string">&quot;&quot;</span>));</span><br><span class="line">&#125;</span><br><span class="line">redisTemplate.opsForStream().createGroup(event, group);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line"><span class="keyword">throw</span> e;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title function_">startSubscription</span><span class="params">(String event, Class type, StreamListener streamListener)</span> &#123;</span><br><span class="line"><span class="type">RedisConnectionFactory</span> <span class="variable">redisConnectionFactory</span> <span class="operator">=</span> redisTemplate.getConnectionFactory();</span><br><span class="line"></span><br><span class="line">    StreamMessageListenerContainer.<span class="type">StreamMessageListenerContainerOptions</span> <span class="variable">options</span> <span class="operator">=</span> StreamMessageListenerContainer.StreamMessageListenerContainerOptions</span><br><span class="line">            .builder().batchSize(<span class="number">5</span>) <span class="comment">// 设置批次大小为 5</span></span><br><span class="line">            .pollTimeout(Duration.ofSeconds(<span class="number">1</span>)).targetType(type).build();</span><br><span class="line"></span><br><span class="line">    <span class="type">StreamMessageListenerContainer</span> <span class="variable">listenerContainer</span> <span class="operator">=</span> StreamMessageListenerContainer.create(redisConnectionFactory,</span><br><span class="line">            options);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// redisTemplate 会自动加上前缀,所有在监听的时候也要加上</span></span><br><span class="line">    event = <span class="string">&quot;frl-stream:&quot;</span> + event;</span><br><span class="line">    listenerContainer.receiveAutoAck(Consumer.from(group, group + dataCenterId),</span><br><span class="line">            StreamOffset.create(event, ReadOffset.lastConsumed()), streamListener);</span><br><span class="line"></span><br><span class="line">    listenerContainer.start();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>核心逻辑</p>
+<ol>
+<li>通过 listenerContainer.receiveAutoAck(…) 注册了一个消息监听器，该监听器实现了 StreamListener 接口，定义了 onMessage 方法用于处理接收到的消息。</li>
+<li>调用 listenerContainer.start() 启动消息监听。</li>
+<li>当 Redis Stream 中有消息到达时，StreamMessageListenerContainer 会调用注册的 StreamListener 的 onMessage 方法，并将消息作为参数传递给这个方法。</li>
+<li>在 onMessage 方法中，编写逻辑来处理接收到的消息</li>
+</ol>
+<p>这里 event 做了特殊操作，是因为在redisTemplate中设置了 key 的前缀，是用redisTemplate创建的队列，而这里是通过listenerContainer添加监听，所有为了匹配上 key 添加这个操作</p>
+<p>项目启动后自动对注解添加监听操作</p>
+<pre><code>public class ListenAnnotation implements ApplicationListener&lt;ContextRefreshedEvent&gt; &#123;
+private static final Logger log = LoggerFactory.getLogger(ListenAnnotation.class);
+
+final RedisStreamMqService redisStreamMqService;
+
+public ListenAnnotation(RedisStreamMqService redisStreamMqService) &#123;
+    this.redisStreamMqService = redisStreamMqService;
+&#125;
+
+@Override
+public void onApplicationEvent(ContextRefreshedEvent event) &#123;
+    if (event.getApplicationContext().getParent() == null) &#123;
+        Map&lt;String, Object&gt; beans = event.getApplicationContext().getBeansWithAnnotation(RedisStreamMqListen.class);
+        for (Object bean : beans.values()) &#123;
+            RedisStreamMqListen ca = bean.getClass().getAnnotation(RedisStreamMqListen.class);
+            redisStreamMqService.listener(ca.value(), ca.type(), (StreamListener) bean);
+            log.info(&quot;event &#123;&#125; start listen&quot;, ca.value());
+        &#125;
+
+    &#125;
+&#125;
+
+&#125;
+</code></pre>
+<p>在应用启动过程中，ListenAnnotation会监听 ContextRefreshedEvent 事件，然后扫描应用上下文中的所有 Bean，查找标记了 @RedisStreamMqListen 注解的 Bean，然后将它们注册到RedisStreamMqStartService 中进行消息监听。<br>event.getApplicationContext().getParent() &#x3D;&#x3D; null<br>判断是否为根上下文，确保注册方法只执行一次<br>3.实现监听类,使用</p>
+<pre><code>@Component
+@Slf4j
+@RedisStreamMqListen(value = &quot;briefReportListener&quot;, type = AnalyzeToolDTO.class)
+public class BriefReportListener implements StreamListener&lt;String, ObjectRecord&lt;String, AnalyzeToolDTO&gt;&gt; &#123;
+
+@Resource
+private BriefReportServiceImpl briefReportService;
+
+
+@SneakyThrows
+@Override
+public void onMessage(ObjectRecord&lt;String, AnalyzeToolDTO&gt; message) &#123;
+    ...
+&#125;
+</code></pre>
+<p>}</p>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2023/08/05/%E7%BA%BF%E7%A8%8B%E6%B1%A0/">线程池</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/01/08/oauth/">oauth</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">yi</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.26.8">Stellar 1.26.8</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class='float-panel mobile-only blur' style='display:none'>
+  <button type='button' class='sidebar-toggle mobile' onclick='sidebar.toggle()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+<div class="main-mask" onclick="sidebar.toggle()"></div></div></div><div class="scripts">
+<script type="text/javascript">
+  const stellar = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    loadCSS: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    // 从 butterfly 和 volantis 获得灵感
+    loadScript: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = stellar.config.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    // https://github.com/jerryc127/hexo-theme-butterfly
+    jQuery: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        stellar.loadScript(stellar.plugins.jQuery).then(fn)
+      } else {
+        fn()
+      }
+    }
+  };
+  stellar.version = '1.26.8';
+  stellar.github = 'https://github.com/xaoxuu/hexo-theme-stellar/tree/1.26.8';
+  stellar.config = {
+    date_suffix: {
+      just: '刚刚',
+      min: '分钟前',
+      hour: '小时前',
+      day: '天前',
+      month: '个月前',
+    },
+    root : '/',
+  };
+
+  // required plugins (only load if needs)
+  stellar.plugins = {
+    jQuery: 'https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js'
+  };
+
+  if ('local_search') {
+    stellar.search = {};
+    stellar.search.service = 'local_search';
+    if (stellar.search.service == 'local_search') {
+      let service_obj = Object.assign({}, {"field":"all","path":"/search.json","content":true,"codeblock":true,"sort":"-date"});
+      stellar.search[stellar.search.service] = service_obj;
+    }
+  }
+
+  // stellar js
+  stellar.plugins.stellar = Object.assign({"sites":"/js/plugins/sites.js","friends":"/js/plugins/friends.js","ghinfo":"/js/plugins/ghinfo.js","timeline":"/js/plugins/timeline.js","linkcard":"/js/plugins/linkcard.js","fcircle":"/js/plugins/fcircle.js","weibo":"/js/plugins/weibo.js","memos":"/js/plugins/memos.js","marked":"/js/plugins/marked.js"});
+
+  stellar.plugins.marked = Object.assign("https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js");
+  // optional plugins
+  if ('true' == 'true') {
+    stellar.plugins.lazyload = Object.assign({"enable":true,"js":"https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js","transition":"fade"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.swiper = Object.assign({"enable":true,"css":"https://unpkg.com/swiper@10.3/swiper-bundle.min.css","js":"https://unpkg.com/swiper@10.3/swiper-bundle.min.js"});
+  }
+  if ('' == 'true') {
+    stellar.plugins.scrollreveal = Object.assign({"enable":null,"js":"https://cdn.bootcdn.net/ajax/libs/scrollReveal.js/4.0.9/scrollreveal.min.js","distance":"16px","duration":800,"interval":100,"scale":1});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.preload = Object.assign({"enable":true,"service":"flying_pages","flying_pages":"https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.fancybox = Object.assign({"enable":true,"js":"https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js","css":"https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css","selector":null});
+  }
+  if ('false' == 'true') {
+    stellar.plugins.heti = Object.assign({"enable":false,"css":"https://unpkg.com/heti@0.9.2/umd/heti.min.css","js":"https://unpkg.com/heti@0.9.2/umd/heti-addon.min.js"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.copycode = Object.assign({"enable":true,"js":"/js/plugins/copycode.js","default_text":"Copy","success_text":"Copied","toast":"复制成功"});
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.26.8" async></script>
+
+<!-- optional -->
+
+
+
+
+
+
+<!-- inject -->
+<script type="text/javascript" src="/customize/js/ZYDark.js"></script>
+</div></body></html>

@@ -1,0 +1,372 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.26.8" theme-name="Stellar" theme-version="1.26.8">
+  
+  <meta name="generator" content="Hexo 7.1.1">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" content="#f8f8f8">
+  
+  <title>线程池 - 笔记</title>
+
+  
+    <meta name="description" content="一、创建@Async线程池创建一个配置类 配置线程池参数注入 spring  使用时加入线程池名称 123456789101112131415161718@Configurationpublic class AsyncConfig &#123;    @Bean(name &#x3D; &quot;taskExecutor&quot;)    public TaskExecutor taskExecutor">
+<meta property="og:type" content="article">
+<meta property="og:title" content="线程池">
+<meta property="og:url" content="https://yi1108.github.io/2023/08/05/%E7%BA%BF%E7%A8%8B%E6%B1%A0/index.html">
+<meta property="og:site_name" content="笔记">
+<meta property="og:description" content="一、创建@Async线程池创建一个配置类 配置线程池参数注入 spring  使用时加入线程池名称 123456789101112131415161718@Configurationpublic class AsyncConfig &#123;    @Bean(name &#x3D; &quot;taskExecutor&quot;)    public TaskExecutor taskExecutor">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/22468540/1691200544410-d7b931a8-5cde-4dff-aa7c-6eabea3294cb.png#averageHue=%23f7f7f7&clientId=ud33f2c9d-7518-4&from=paste&height=170&id=u09d97412&originHeight=340&originWidth=753&originalType=binary&ratio=2&rotation=0&showTitle=false&size=49981&status=done&style=none&taskId=u03a5f348-2e99-4a7f-8809-360c262a545&title=&width=376.5">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/22468540/1691201499126-7524f675-0c73-4ad2-843a-6e957448a545.png#averageHue=%23202125&clientId=ud33f2c9d-7518-4&from=paste&height=293&id=u36b4051a&originHeight=586&originWidth=1406&originalType=binary&ratio=2&rotation=0&showTitle=false&size=173590&status=done&style=none&taskId=u069b07a4-904a-4db5-8de7-56ce9513ba8&title=&width=703">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/22468540/1691201337867-6254483b-076f-409b-85c7-1a5d330fd087.png#averageHue=%23202124&clientId=ud33f2c9d-7518-4&from=paste&height=363&id=u156e7c99&originHeight=726&originWidth=1392&originalType=binary&ratio=2&rotation=0&showTitle=false&size=160673&status=done&style=none&taskId=ua808a926-b32c-410c-b686-dc5e895165f&title=&width=696">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/22468540/1691201641249-3a1c28c0-6d7b-4bd2-ac7a-c3625bb18109.png#averageHue=%231f2124&clientId=ud33f2c9d-7518-4&from=paste&height=304&id=u3688aeae&originHeight=608&originWidth=1448&originalType=binary&ratio=2&rotation=0&showTitle=false&size=96926&status=done&style=none&taskId=u67e74367-abe9-4c17-ab68-13e0aa6169d&title=&width=724">
+<meta property="og:image" content="https://cdn.nlark.com/yuque/0/2023/png/22468540/1691201251519-d85c7ecc-6681-4227-8c0c-9a16c5eaddb1.png#averageHue=%23212226&clientId=ud33f2c9d-7518-4&from=paste&height=299&id=uaae6f7dd&originHeight=598&originWidth=1402&originalType=binary&ratio=2&rotation=0&showTitle=false&size=155579&status=done&style=none&taskId=u94d7c6d9-2f74-46d7-9b06-54de78a0967&title=&width=701">
+<meta property="article:published_time" content="2023-08-05T09:03:30.000Z">
+<meta property="article:modified_time" content="2024-02-28T07:26:18.522Z">
+<meta property="article:author" content="yi">
+<meta property="article:tag" content="Java">
+<meta property="article:tag" content="线程池">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.nlark.com/yuque/0/2023/png/22468540/1691200544410-d7b931a8-5cde-4dff-aa7c-6eabea3294cb.png#averageHue=%23f7f7f7&clientId=ud33f2c9d-7518-4&from=paste&height=170&id=u09d97412&originHeight=340&originWidth=753&originalType=binary&ratio=2&rotation=0&showTitle=false&size=49981&status=done&style=none&taskId=u03a5f348-2e99-4a7f-8809-360c262a545&title=&width=376.5">
+  
+  
+  
+  <meta name="keywords" content="Java,线程池">
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.26.8">
+
+  
+
+  
+
+  
+  <link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'"><script>
+  if (window.localStorage.getItem('ZYI_Theme_Mode')==='dark' || (window.localStorage.getItem('ZYI_Theme_Mode')==='Moss' && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+      document.querySelector("html").id = "ZYDark";
+  }
+</script>
+<link rel="stylesheet" href="/customize/css/ZYDark.css">
+</head>
+<body>
+
+<div class="l_body content tech" id="start" layout="post" ><aside class="l_left"><div class="sidebar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="title" href="/"><div class="main" ff="title">笔记</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"><a class="nav-item active" title="博客" href="/" style="color:#1BCDFC"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M5.879 2.879C5 3.757 5 5.172 5 8v8c0 2.828 0 4.243.879 5.121C6.757 22 8.172 22 11 22h2c2.828 0 4.243 0 5.121-.879C19 20.243 19 18.828 19 16V8c0-2.828 0-4.243-.879-5.121C17.243 2 15.828 2 13 2h-2c-2.828 0-4.243 0-5.121.879M8.25 17a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5H9a.75.75 0 0 1-.75-.75M9 12.25a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5zM8.25 9A.75.75 0 0 1 9 8.25h6a.75.75 0 0 1 0 1.5H9A.75.75 0 0 1 8.25 9" clip-rule="evenodd"/><path fill="currentColor" d="M5.235 4.058C5 4.941 5 6.177 5 8v8c0 1.823 0 3.058.235 3.942L5 19.924c-.975-.096-1.631-.313-2.121-.803C2 18.243 2 16.828 2 14v-4c0-2.829 0-4.243.879-5.121c.49-.49 1.146-.707 2.121-.803zm13.53 15.884C19 19.058 19 17.822 19 16V8c0-1.823 0-3.059-.235-3.942l.235.018c.975.096 1.631.313 2.121.803C22 5.757 22 7.17 22 9.999v4c0 2.83 0 4.243-.879 5.122c-.49.49-1.146.707-2.121.803z" opacity=".5"/></svg></a><a class="nav-item" title="文档" href="/wiki/" style="color:#3DC550"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="currentColor" fill-rule="evenodd" d="M14.25 4.48v3.057c0 .111 0 .27.02.406a.936.936 0 0 0 .445.683a.96.96 0 0 0 .783.072c.13-.04.272-.108.378-.159L17 8.005l1.124.534c.106.05.248.119.378.16a.958.958 0 0 0 .783-.073a.936.936 0 0 0 .444-.683c.021-.136.021-.295.021-.406V3.031c.113-.005.224-.01.332-.013C21.154 2.98 22 3.86 22 4.933v11.21c0 1.112-.906 2.01-2.015 2.08c-.97.06-2.108.179-2.985.41c-1.082.286-1.99 1.068-3.373 1.436c-.626.167-1.324.257-1.627.323V5.174c.32-.079 1.382-.203 1.674-.371c.184-.107.377-.216.576-.323m5.478 8.338a.75.75 0 0 1-.546.91l-4 1a.75.75 0 0 1-.364-1.456l4-1a.75.75 0 0 1 .91.546" clip-rule="evenodd"/><path fill="currentColor" d="M18.25 3.151c-.62.073-1.23.18-1.75.336a8.2 8.2 0 0 0-.75.27v3.182l.75-.356l.008-.005a1.13 1.13 0 0 1 .492-.13c.047 0 .094.004.138.01c.175.029.315.1.354.12l.009.005l.749.356V3.647z"/><path fill="currentColor" d="M12 5.214c-.334-.064-1.057-.161-1.718-.339C8.938 4.515 8.05 3.765 7 3.487c-.887-.234-2.041-.352-3.018-.412C2.886 3.007 2 3.9 2 4.998v11.146c0 1.11.906 2.01 2.015 2.079c.97.06 2.108.179 2.985.41c.486.129 1.216.431 1.873.726c1.005.451 2.052.797 3.127 1.034z" opacity=".5"/><path fill="currentColor" d="M4.273 12.818a.75.75 0 0 1 .91-.545l4 1a.75.75 0 1 1-.365 1.455l-4-1a.75.75 0 0 1-.545-.91m.909-4.545a.75.75 0 1 0-.364 1.455l4 1a.75.75 0 0 0 .364-1.455z"/></svg></a></nav>
+</div>
+<div class="widgets">
+
+<widget class="widget-wrapper toc single" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span></div><div class="widget-body fs14"><div class="doc-tree active"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%88%9B%E5%BB%BA-Async%E7%BA%BF%E7%A8%8B%E6%B1%A0"><span class="toc-text">一、创建@Async线程池</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Executors%E7%B1%BB%E5%88%9B%E5%BB%BA%E5%9B%9B%E7%A7%8D%E5%B8%B8%E7%94%A8%E7%BA%BF%E7%A8%8B%E6%B1%A0"><span class="toc-text">二、Executors类创建四种常用线程池</span></a></li><li class="toc-item toc-level-2"><a class="toc-link"><span class="toc-text"></span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Executors%E5%92%8CThreaPoolExecutor%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-text">Executors和ThreaPoolExecutor创建线程池的区别</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Executors-%E5%90%84%E4%B8%AA%E6%96%B9%E6%B3%95%E7%9A%84%E5%BC%8A%E7%AB%AF%EF%BC%9A"><span class="toc-text">Executors 各个方法的弊端：</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%A4%E7%A7%8D%E6%8F%90%E4%BA%A4%E4%BB%BB%E5%8A%A1%E7%9A%84%E6%96%B9%E6%B3%95"><span class="toc-text">两种提交任务的方法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#execute"><span class="toc-text">execute</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#submit"><span class="toc-text">submit</span></a></li></ol></li></ol></div></div></widget>
+
+
+
+
+
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/2023/08/05/Spring-%E6%95%B4%E5%90%88-Redis-Stream-%E5%81%9A%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/"><span class="title">Spring 整合 Redis Stream 做消息队列</span></a><a class="item title" href="/2022/11/12/docker%E5%AD%A6%E4%B9%A0/"><span class="title">docker学习</span></a><a class="item title" href="/2023/01/08/oauth/"><span class="title">oauth</span></a><a class="item title" href="/2022/11/08/git/"><span class="title">git</span></a><a class="item title" href="/2022/11/12/activiti%E5%AD%A6%E4%B9%A0/"><span class="title">activiti学习</span></a><a class="item title" href="/2022/11/30/py%E5%AD%A6%E4%B9%A0/"><span class="title">福瑞莱</span></a><a class="item title" href="/2022/11/01/SpringCloud%E5%AD%A6%E4%B9%A0/"><span class="title">SpringCloud学习</span></a><a class="item title" href="/2022/11/12/mysql%E8%A1%A8%E5%90%8D%E5%88%97%E5%90%8D%E8%BD%AC%E5%B0%8F%E5%86%99/"><span class="title">mysql表名列名转小写</span></a><a class="item title" href="/2022/07/09/redis%E5%AD%A6%E4%B9%A0%E5%B0%8F%E8%AE%B0/"><span class="title">redis学习小记</span></a><a class="item title" href="/2022/10/31/javase%E5%A4%8D%E4%B9%A0/"><span class="title">javase</span></a></div></widget>
+</div>
+<footer class="footer dis-select"><div class="social-wrap"><a class="social" href="javaScript:void('永夜');" rel="noopener noreferrer"><img class="lazy" id="ThemeM" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/customize/svg/moon.svg"/></a><a class="social" href="javaScript:void('永昼');" rel="noopener noreferrer"><img class="lazy" id="ThemeL" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="/customize/svg/sun.svg"/></a></div></footer>
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    
+<div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/">文章</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2023-08-05T09:03:30.000Z">2023-08-05</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-02-28T07:26:18.522Z">2024-02-28</time></span></div></div>
+</div>
+
+    
+    <div class="bottom">
+      <div class="text-area">
+        <h1 class="text title"><span>线程池</span></h1>
+      </div>
+    </div>
+    
+  </div>
+  </div><article class="md-text content"><h2 id="一、创建-Async线程池"><a href="#一、创建-Async线程池" class="headerlink" title="一、创建@Async线程池"></a>一、创建@Async线程池</h2><p>创建一个配置类 配置线程池参数注入 spring  使用时加入线程池名称</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">@Configuration</span><br><span class="line">public class AsyncConfig &#123;</span><br><span class="line">    @Bean(name = &quot;taskExecutor&quot;)</span><br><span class="line">    public TaskExecutor taskExecutor() &#123;</span><br><span class="line">        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();</span><br><span class="line">        executor.setCorePoolSize(10);</span><br><span class="line">        executor.setMaxPoolSize(100);</span><br><span class="line">        executor.setQueueCapacity(200);</span><br><span class="line">        executor.setThreadNamePrefix(&quot;MyExecutor-&quot;);</span><br><span class="line">        executor.initialize();</span><br><span class="line">        return executor;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@Async(&quot;taskExecutor&quot;)</span><br><span class="line">public void doSomething() &#123;</span><br><span class="line">    // do something here</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="二、Executors类创建四种常用线程池"><a href="#二、Executors类创建四种常用线程池" class="headerlink" title="二、Executors类创建四种常用线程池"></a>二、Executors类创建四种常用线程池</h2><p>参考 <a target="_blank" rel="noopener" href="https://blog.csdn.net/ThinkWon/article/details/102541990">https://blog.csdn.net/ThinkWon/article/details/102541990</a></p>
+<h2 id=""><a href="#" class="headerlink" title=""></a><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://cdn.nlark.com/yuque/0/2023/png/22468540/1691200544410-d7b931a8-5cde-4dff-aa7c-6eabea3294cb.png#averageHue=%23f7f7f7&clientId=ud33f2c9d-7518-4&from=paste&height=170&id=u09d97412&originHeight=340&originWidth=753&originalType=binary&ratio=2&rotation=0&showTitle=false&size=49981&status=done&style=none&taskId=u03a5f348-2e99-4a7f-8809-360c262a545&title=&width=376.5" alt="image.png"></h2><p>Java里面线程池的顶级接口是Executor，Executor并不是一个线程 池，而只是一个执行线程的工具。真正的线程池接口是ExecutorService</p>
+<p>比较重要的几个类：</p>
+<table>
+<thead>
+<tr>
+<th>类&#x2F;接口</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>ExecutorService</td>
+<td>真正的线程池接口</td>
+</tr>
+<tr>
+<td>ScheduledExecutorService</td>
+<td>能和Timer&#x2F;TimerTask类似，解决那些需要任务重复执行的问题</td>
+</tr>
+<tr>
+<td>ThreadPoolExecutor</td>
+<td>ExecutorService的默认实现</td>
+</tr>
+<tr>
+<td>ScheduledThreadPoolExecutor</td>
+<td>继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现</td>
+</tr>
+</tbody></table>
+<p>Java通过Executors工厂类提供四种线程池，分别为：</p>
+<table>
+<thead>
+<tr>
+<th>类名</th>
+<th>描述</th>
+<th>场景</th>
+<th>源码</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>newCachedThreadPool</td>
+<td>可缓存线程池，如果线程池长度超过处理需要，可灵活回收空闲线程，若无可回收，否则新建线程。（线程最大并发数不可控制）</td>
+<td>用于并发执行大量短期的小任务，或者是负载较轻的服务器。</td>
+<td><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://cdn.nlark.com/yuque/0/2023/png/22468540/1691201499126-7524f675-0c73-4ad2-843a-6e957448a545.png#averageHue=%23202125&clientId=ud33f2c9d-7518-4&from=paste&height=293&id=u36b4051a&originHeight=586&originWidth=1406&originalType=binary&ratio=2&rotation=0&showTitle=false&size=173590&status=done&style=none&taskId=u069b07a4-904a-4db5-8de7-56ce9513ba8&title=&width=703" alt="image.png"></td>
+</tr>
+<tr>
+<td>newFixedThreadPool</td>
+<td>固定大小的线程池，可控制线程最大并发数，超出的线程会在队列中等待。</td>
+<td>用于负载比较重的服务器，为了资源的合理利用，需要限制当前线程数量。</td>
+<td><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://cdn.nlark.com/yuque/0/2023/png/22468540/1691201337867-6254483b-076f-409b-85c7-1a5d330fd087.png#averageHue=%23202124&clientId=ud33f2c9d-7518-4&from=paste&height=363&id=u156e7c99&originHeight=726&originWidth=1392&originalType=binary&ratio=2&rotation=0&showTitle=false&size=160673&status=done&style=none&taskId=ua808a926-b32c-410c-b686-dc5e895165f&title=&width=696" alt="image.png"></td>
+</tr>
+<tr>
+<td>newScheduledThreadPool</td>
+<td>定时线程池，支持定时及周期性任务执行。</td>
+<td>用于需要多个后台线程执行周期任务，同时需要限制线程数量的场景。</td>
+<td><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://cdn.nlark.com/yuque/0/2023/png/22468540/1691201641249-3a1c28c0-6d7b-4bd2-ac7a-c3625bb18109.png#averageHue=%231f2124&clientId=ud33f2c9d-7518-4&from=paste&height=304&id=u3688aeae&originHeight=608&originWidth=1448&originalType=binary&ratio=2&rotation=0&showTitle=false&size=96926&status=done&style=none&taskId=u67e74367-abe9-4c17-ab68-13e0aa6169d&title=&width=724" alt="image.png"></td>
+</tr>
+<tr>
+<td>newSingleThreadExecutor</td>
+<td>单线程的线程池，保证任务按照指定顺序(FIFO, LIFO, 优先级)执行</td>
+<td>用于串行执行任务的场景，每个任务必须按顺序执行，不需要并发执行。</td>
+<td><img class="lazy" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="https://cdn.nlark.com/yuque/0/2023/png/22468540/1691201251519-d85c7ecc-6681-4227-8c0c-9a16c5eaddb1.png#averageHue=%23212226&clientId=ud33f2c9d-7518-4&from=paste&height=299&id=uaae6f7dd&originHeight=598&originWidth=1402&originalType=binary&ratio=2&rotation=0&showTitle=false&size=155579&status=done&style=none&taskId=u94d7c6d9-2f74-46d7-9b06-54de78a0967&title=&width=701" alt="image.png"></td>
+</tr>
+</tbody></table>
+<h2 id="Executors和ThreaPoolExecutor创建线程池的区别"><a href="#Executors和ThreaPoolExecutor创建线程池的区别" class="headerlink" title="Executors和ThreaPoolExecutor创建线程池的区别"></a>Executors和ThreaPoolExecutor创建线程池的区别</h2><h3 id="Executors-各个方法的弊端："><a href="#Executors-各个方法的弊端：" class="headerlink" title="Executors 各个方法的弊端："></a>Executors 各个方法的弊端：</h3><p>newFixedThreadPool 和 newSingleThreadExecutor:<br>主要问题是堆积的请求处理队列可能会耗费非常大的内存，甚至 OOM。<br>newCachedThreadPool 和 newScheduledThreadPool:<br>主要问题是线程数最大数是 Integer.MAX_VALUE，可能会创建数量非常多的线程，甚至 OOM。<br>ThreaPoolExecutor:<br>创建线程池方式只有一种，就是走它的构造函数，参数自己指定,灵活</p>
+<h2 id="两种提交任务的方法"><a href="#两种提交任务的方法" class="headerlink" title="两种提交任务的方法"></a>两种提交任务的方法</h2><h3 id="execute"><a href="#execute" class="headerlink" title="execute"></a>execute</h3><p>提交不需要返回值的任务</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">ExecutorService</span> <span class="variable">executor</span> <span class="operator">=</span> Executors.newCachedThreadPool();</span><br><span class="line">executor.execute(<span class="keyword">new</span> <span class="title class_">Runnable</span>() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">run</span><span class="params">()</span> &#123;</span><br><span class="line">        <span class="comment">//do something</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>execute(执行)() 的参数是一个 Runnable，也没有返回值。因此提交后无法判断该任务是否被线程池执行成功。</p>
+<h3 id="submit"><a href="#submit" class="headerlink" title="submit"></a><a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=submit&spm=1001.2101.3001.7020">submit</a></h3><p>提交需要返回值的任务</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;T&gt; Future&lt;T&gt; <span class="title function_">submit</span><span class="params">(Callable&lt;T&gt; task)</span>;</span><br><span class="line">&lt;T&gt; Future&lt;T&gt; <span class="title function_">submit</span><span class="params">(Runnable task, T result)</span>;</span><br><span class="line">Future&lt;?&gt; submit(Runnable task);</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>submit(提交)() 有三种重载，参数可以是 Callable 也可以是 Runnable。<br>同时它会返回一个 Funture 对象，通过它我们可以判断任务是否执行成功。<br>获得执行结果调用 Future(未来).get() 方法，这个方法会阻塞当前线程直到任务完成。</p>
+<p>提交一个 Callable 任务时，需要使用 FutureTask 包一层：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">FutureTask</span> <span class="variable">futureTask</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">FutureTask</span>(<span class="keyword">new</span> <span class="title class_">Callable</span>&lt;String&gt;() &#123;    <span class="comment">//创建 Callable 任务</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String <span class="title function_">call</span><span class="params">()</span> <span class="keyword">throws</span> Exception &#123;</span><br><span class="line">        <span class="type">String</span> <span class="variable">result</span> <span class="operator">=</span> <span class="string">&quot;&quot;</span>;</span><br><span class="line">        <span class="comment">//do something</span></span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line">Future&lt;?&gt; submit = executor.submit(futureTask);    <span class="comment">//提交到线程池</span></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="type">Object</span> <span class="variable">result</span> <span class="operator">=</span> submit.get();    <span class="comment">//获取结果</span></span><br><span class="line">&#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; <span class="keyword">catch</span> (ExecutionException e) &#123;</span><br><span class="line">    e.printStackTrace();</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"><div class="note">较新文章</div><a href="/2024/02/05/nio/%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B%EF%BC%9A%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E4%BA%94%E7%A7%8DIO%E6%A8%A1%E5%9E%8B%E5%A4%A7%E5%85%A8/">五种IO模型：操作系统五种IO模型大全</a></div><div class="item" id="next"><div class="note">较早文章</div><a href="/2023/08/05/Spring-%E6%95%B4%E5%90%88-Redis-Stream-%E5%81%9A%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/">Spring 整合 Redis Stream 做消息队列</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">yi</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.26.8">Stellar 1.26.8</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class='float-panel mobile-only blur' style='display:none'>
+  <button type='button' class='sidebar-toggle mobile' onclick='sidebar.toggle()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+<div class="main-mask" onclick="sidebar.toggle()"></div></div></div><div class="scripts">
+<script type="text/javascript">
+  const stellar = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    loadCSS: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    // 从 butterfly 和 volantis 获得灵感
+    loadScript: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = stellar.config.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    // https://github.com/jerryc127/hexo-theme-butterfly
+    jQuery: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        stellar.loadScript(stellar.plugins.jQuery).then(fn)
+      } else {
+        fn()
+      }
+    }
+  };
+  stellar.version = '1.26.8';
+  stellar.github = 'https://github.com/xaoxuu/hexo-theme-stellar/tree/1.26.8';
+  stellar.config = {
+    date_suffix: {
+      just: '刚刚',
+      min: '分钟前',
+      hour: '小时前',
+      day: '天前',
+      month: '个月前',
+    },
+    root : '/',
+  };
+
+  // required plugins (only load if needs)
+  stellar.plugins = {
+    jQuery: 'https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js'
+  };
+
+  if ('local_search') {
+    stellar.search = {};
+    stellar.search.service = 'local_search';
+    if (stellar.search.service == 'local_search') {
+      let service_obj = Object.assign({}, {"field":"all","path":"/search.json","content":true,"codeblock":true,"sort":"-date"});
+      stellar.search[stellar.search.service] = service_obj;
+    }
+  }
+
+  // stellar js
+  stellar.plugins.stellar = Object.assign({"sites":"/js/plugins/sites.js","friends":"/js/plugins/friends.js","ghinfo":"/js/plugins/ghinfo.js","timeline":"/js/plugins/timeline.js","linkcard":"/js/plugins/linkcard.js","fcircle":"/js/plugins/fcircle.js","weibo":"/js/plugins/weibo.js","memos":"/js/plugins/memos.js","marked":"/js/plugins/marked.js"});
+
+  stellar.plugins.marked = Object.assign("https://cdn.bootcdn.net/ajax/libs/marked/4.0.18/marked.min.js");
+  // optional plugins
+  if ('true' == 'true') {
+    stellar.plugins.lazyload = Object.assign({"enable":true,"js":"https://cdn.bootcdn.net/ajax/libs/vanilla-lazyload/17.8.4/lazyload.min.js","transition":"fade"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.swiper = Object.assign({"enable":true,"css":"https://unpkg.com/swiper@10.3/swiper-bundle.min.css","js":"https://unpkg.com/swiper@10.3/swiper-bundle.min.js"});
+  }
+  if ('' == 'true') {
+    stellar.plugins.scrollreveal = Object.assign({"enable":null,"js":"https://cdn.bootcdn.net/ajax/libs/scrollReveal.js/4.0.9/scrollreveal.min.js","distance":"16px","duration":800,"interval":100,"scale":1});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.preload = Object.assign({"enable":true,"service":"flying_pages","flying_pages":"https://cdn.bootcdn.net/ajax/libs/flying-pages/2.1.2/flying-pages.min.js"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.fancybox = Object.assign({"enable":true,"js":"https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.umd.min.js","css":"https://cdn.bootcdn.net/ajax/libs/fancyapps-ui/5.0.22/fancybox/fancybox.min.css","selector":null});
+  }
+  if ('false' == 'true') {
+    stellar.plugins.heti = Object.assign({"enable":false,"css":"https://unpkg.com/heti@0.9.2/umd/heti.min.css","js":"https://unpkg.com/heti@0.9.2/umd/heti-addon.min.js"});
+  }
+  if ('true' == 'true') {
+    stellar.plugins.copycode = Object.assign({"enable":true,"js":"/js/plugins/copycode.js","default_text":"Copy","success_text":"Copied","toast":"复制成功"});
+  }
+</script>
+
+<!-- required -->
+<script src="/js/main.js?v=1.26.8" async></script>
+
+<!-- optional -->
+
+
+
+
+
+
+<!-- inject -->
+<script type="text/javascript" src="/customize/js/ZYDark.js"></script>
+</div></body></html>
