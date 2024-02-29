@@ -3,7 +3,7 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Hexo
+title: 笔记
 subtitle: ''
 description: ''
 keywords:
@@ -107,10 +107,18 @@ deploy:
   repo: https://github.com/yi1108/yi1108.github.io.git
   branch: pages
 
-
 inject:
   head:
-    - <link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'"> #字体
+    - <link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-screen-webfont/style.css" media="print" onload="this.media='all'">
+    - |
+      <script>
+        if (window.localStorage.getItem('ZYI_Theme_Mode')==='dark' || (window.localStorage.getItem('ZYI_Theme_Mode')==='Moss' && window.matchMedia('(prefers-color-scheme: dark)').matches)){
+            document.querySelector("html").id = "ZYDark";
+        }
+      </script>
+    - <link rel="stylesheet" href="/customize/css/ZYDark.css">
+  script:
+    - <script type="text/javascript" src="/customize/js/ZYDark.js"></script>
 
 
 tag_plugins:
@@ -134,3 +142,4 @@ plugins:
     # 使用waline评论可以写: #waline_container .vcontent img
     selector: .swiper-slide img, .md-text.content p>img, .md-text.content li img , .wl-content img, .image-bg img # 多个选择器用英文逗号隔开
     #selector: .swiper-slide img # 多个选择器用英文逗号隔开
+

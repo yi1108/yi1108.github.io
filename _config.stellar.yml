@@ -1,30 +1,30 @@
-
-footer:
-  social:
-    QQ:
-      icon: '<img src="/customize/svg/contact.svg"/>'
-      url: https://wpa.qq.com/msgrd?v=3&uin=2856024429&site=qq&menu=yes&jumpflag=1
-    github:
-      icon: '<img src="/customize/svg/github.svg"/>'
-      url: 	https://images.unsplash.com/photo-1696669710138-29…xMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
-    #iconfont:
-    #  icon: '<img src="/customize/svg/iconfont.svg"/>'
-    #  url: https://www.iconfont.cn/
-    unsplash:
-      icon: '<img src="/customize/svg/unsplash.svg"/>'
-      url: https://unsplash.com/@z23654262
-    train:
-      icon: '<img src="/customize/svg/train.svg"/>'
-      url: https://unsplash.com/@z23654262
-    Moon:
-      icon: '<img id="ThemeM" src="/customize/svg/moon.svg"/>'
-      url: javaScript:void('永夜');
-    Sun:
-      icon: '<img id="ThemeL" src="/customize/svg/sun.svg"/>'
-      url: javaScript:void('永昼');
-    #AI:
-    # icon: '<img id="ThemeAI" src="/customize/svg/auto.svg"/>'
-    # url: javaScript:void('跟随系统');
+#
+#footer:
+#  social:
+#    QQ:
+#      icon: '<img src="/customize/svg/contact.svg"/>'
+#      url: https://wpa.qq.com/msgrd?v=3&uin=2856024429&site=qq&menu=yes&jumpflag=1
+#    github:
+#      icon: '<img src="/customize/svg/github.svg"/>'
+#      url: 	https://images.unsplash.com/photo-1696669710138-29…xMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+#    #iconfont:
+#    #  icon: '<img src="/customize/svg/iconfont.svg"/>'
+#    #  url: https://www.iconfont.cn/
+#    unsplash:
+#      icon: '<img src="/customize/svg/unsplash.svg"/>'
+#      url: https://unsplash.com/@z23654262
+#    train:
+#      icon: '<img src="/customize/svg/train.svg"/>'
+#      url: https://unsplash.com/@z23654262
+#    Moon:
+#      icon: '<img id="ThemeM" src="/customize/svg/moon.svg"/>'
+#      url: javaScript:void('永夜');
+#    Sun:
+#      icon: '<img id="ThemeL" src="/customize/svg/sun.svg"/>'
+#      url: javaScript:void('永昼');
+#    #AI:
+#    # icon: '<img id="ThemeAI" src="/customize/svg/auto.svg"/>'
+#    # url: javaScript:void('跟随系统');
 
 
 sidebar:
@@ -42,6 +42,7 @@ article:
 
 
 style:
+  darkmode: false # auto / always / false
   font-family:
     body: '"LXGW WenKai Screen", sans-serif'
 
@@ -80,3 +81,19 @@ search:
     path: /search.json # 搜索文件存放位置
     content: true # 是否搜索内容
     codeblock: true # 是否搜索代码块（需要content: true)
+
+
+
+
+
+footer:
+  social:
+    Moon:
+      icon: '<img id="ThemeM" src="/customize/svg/moon.svg"/>'
+      url: javaScript:void('永夜');
+    Sun:
+      icon: '<img id="ThemeL" src="/customize/svg/sun.svg"/>'
+      url: javaScript:void('永昼');
+    #AI:
+    # icon: '<img id="ThemeAI" src="/customize/svg/auto.svg"/>'
+    # url: javaScript:void('跟随系统');
